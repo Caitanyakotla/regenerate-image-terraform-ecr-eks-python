@@ -1,0 +1,45 @@
+stages:
+  - info
+  - init
+  - tests
+  - deploy
+
+info:
+  stage: version
+  script:
+    - pwd 
+    - python --version
+    - docker info
+
+
+init:
+  stage: init
+  script:
+    - pip install -r requirements.txt
+
+run_tests:
+  stage: tests
+  script:
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+  tags:
+    - docker  
+
+deploy_staging:
+image: $G_DOCKER_REGISTRY/ubuntu_ecr_login:latest
+  stage: deploy
+  variables:
+   IMAGE_NAME: thumbnail-image
+  tags:
+    - docker
+    - deployment
+before_script:
+    - apt-get upate
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $G_DOCKER_REGISTRY
+    - docker build -t $G_DOCKER_REGISTRY/$IMAGE_NAME:$CI_COMMIT_REF_NAME -f ./dockerfiles/$IMAGE_NAME.Dockerfile .
+after_script:    
+    - docker push $G_DOCKER_REGISTRY/$IMAGE_NAME:$CI_COMMIT_REF_NAME  
+    
+    only:
+    - master  
+   
