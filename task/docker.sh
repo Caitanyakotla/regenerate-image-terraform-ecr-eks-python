@@ -1,3 +1,4 @@
+##!/bin/bash
 # Build python-flask-app image
 docker build -t thumbnail .
 
